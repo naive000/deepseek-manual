@@ -1,6 +1,6 @@
 ---
 name: deepseek-manual
-description: Reference manual for operating the DeepSeek harness (dsh) web UI at http://127.0.0.1:3080/ — sidebar, workspace/session management, slash commands, permission tiers, model selection, the goal mechanism, settings dialog, and the 对话/轨迹 session views. Use this whenever the user asks how to operate dsh's web UI itself, what a specific button/menu/slash command does, or wants to understand dsh's interface mechanics — phrases like "dsh 這個按鈕幹嘛的", "dsh 網頁怎麼用", "/goal 是什麼", "dsh 的權限怎麼設". This is a lookup/reference skill about the UI itself — it is NOT for delegating a coding task to DeepSeek (that's the separate `deepseek-outsource` skill, which handles the worktree/dispatch/verify/merge workflow).
+description: DeepSeek harness(dsh)網頁 UI(http://127.0.0.1:3080/)操作手冊——側邊欄、工作區/session 管理、斜線指令、權限檔位、模型選擇、goal 機制、設定對話框,以及「对话/轨迹」session 視圖。當使用者問 dsh 網頁 UI 本身怎麼操作、某個按鈕/選單/斜線指令是幹嘛的、或想了解 dsh 介面機制時使用——像是「dsh 這個按鈕幹嘛的」「dsh 網頁怎麼用」「/goal 是什麼」「dsh 的權限怎麼設」。這是純查詢/參考型 skill,查的是 UI 本身——不是拿來把 coding 任務委派給 DeepSeek(那是另一個獨立的 `deepseek-outsource` skill,管 worktree/dispatch/驗收/merge 整套工作流程)。
 ---
 
 # DeepSeek Harness(dsh)網頁 UI 操作手冊
@@ -23,6 +23,12 @@ description: Reference manual for operating the DeepSeek harness (dsh) web UI at
 - 網頁 UI 有沒有 CLI 打不到的專屬能力,或反過來(沒驗證過)
 
 之後補完一項,就把這份清單對應那條刪掉,搬到下面對應章節。
+
+## ⚠️ 版本漂移(2026-08-29,dsh 更新到 0.1.2-alpha.1,來源:同日另一 session 實測記錄於 memory——本 session 未複驗,下次實跑時順手確認)
+
+- **裸開 `http://127.0.0.1:3080/` 現在會 401**——要用啟動 log(`~/deepseek-game/dsh-web.log`)裡印出的帶 `?token=` 的完整網址開,browserclaw `navigate` 一次到那個網址就會直接是登入狀態,不用另外處理登入畫面。
+- **「命令」按鈕改名成「指令」**——下面文件裡寫到「命令」按鈕的地方,實際畫面上可能已經顯示「指令」,功能沒變,先以畫面實際文字為準。
+- **輸入框 placeholder 文字變了**:從「描述你想要构建的内容」變成類似「描述你想要构建的内容… / 调用指令 @ 文件或对话」——多了 `@ 文件或对话` 這種行內引用提示,別把側欄的「搜索会话」輸入框誤認成這個 composer。
 
 ## 啟動與基本狀態
 
@@ -56,7 +62,7 @@ description: Reference manual for operating the DeepSeek harness (dsh) web UI at
 1. **選擇工作區**(輸入框上方按鈕):點開是下拉選單,列出最近用過的工作區,最後一項「添加工作区…」跳出目錄瀏覽對話框。**關鍵功能**:對話框有「編輯路徑」按鈕,點下去導覽列變成文字輸入框,可以直接打完整絕對路徑,清單即時 fuzzy filter,不用逐層點資料夾——這是最快最穩定的操作路徑。底部還有:新建文件夹 / 显示隐藏文件 / 取消 / 打开。
    - ⚠️ 用工具清空文字框時,`fill` 類動作預設是「附加」不是「取代」,要先手動全選(Ctrl+A)+刪除再輸入。
 
-2. **Agent 模式**(「標準模式」按鈕,工作區選擇器右邊):對應設定對話框的「Agent 预设」分頁(見下方),可切換 PTC 模式/極簡模式/創造模式,或自訂 preset。
+2. **Agent 模式**(「標準模式」按鈕,工作區選擇器右邊):對應設定對話框的「Agent 预设」分頁(見下方),可切換 PTC 模式/極簡模式/創造模式,或自訂 preset。⚠️ **只能在這個新建會話畫面選,一旦發送訊息開始跑,這顆按鈕就從畫面上消失**(2026-08-29 實測:對比進行中 session 跟新會話畫面的 snapshot,前者完全沒有模式切換按鈕)——選錯要換模式,只能整個開新會話重來,沒有「跑到一半切換」這回事。怎麼判斷該選標準還是 PTC,見 `deepseek-outsource` 的「模式判定」那節。
 
 3. **輸入框**(placeholder「描述你想要构建的内容」):直接打字輸入任務描述。打 `/` 或點旁邊「命令」按鈕跳出斜線指令候選清單。
 
