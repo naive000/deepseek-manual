@@ -26,13 +26,13 @@ description: DeepSeek harness(dsh)網頁 UI(http://127.0.0.1:3080/)操作手冊�
 
 ## ⚠️ 版本漂移(2026-08-29,dsh 更新到 0.1.2-alpha.1,來源:同日另一 session 實測記錄於 memory——本 session 未複驗,下次實跑時順手確認)
 
-- **裸開 `http://127.0.0.1:3080/` 現在會 401**——要用啟動 log(`~/deepseek-game/dsh-web.log`)裡印出的帶 `?token=` 的完整網址開,browserclaw `navigate` 一次到那個網址就會直接是登入狀態,不用另外處理登入畫面。
+- **裸開 `http://127.0.0.1:3080/` 在沒有登入 cookie 時會 401**——要用啟動時印出的帶 `?token=` 的完整網址開,browserclaw `navigate` 一次到那個網址就會直接是登入狀態,不用另外處理登入畫面。2026-09-11 起 dsh web 改由 PM2 常駐,token 網址用 `bash ~/.claude/skills/deepseek-outsource/scripts/dsh-web.sh url` 取得(要 dangerouslyDisableSandbox;舊的 `~/deepseek-game/dsh-web.log` 已不是來源)。token 每次啟動都換,但同一瀏覽器 profile 的登入 cookie 跨重啟有效(簽章密鑰持久化在 `~/.dsh/.credentials.yaml`),所以通常直接開根網址就是登入態,401 才需要去拿 token。
 - **「命令」按鈕改名成「指令」**——下面文件裡寫到「命令」按鈕的地方,實際畫面上可能已經顯示「指令」,功能沒變,先以畫面實際文字為準。
 - **輸入框 placeholder 文字變了**:從「描述你想要构建的内容」變成類似「描述你想要构建的内容… / 调用指令 @ 文件或对话」——多了 `@ 文件或对话` 這種行內引用提示,別把側欄的「搜索会话」輸入框誤認成這個 composer。
 
 ## 啟動與基本狀態
 
-- 網址:`http://127.0.0.1:3080/`(server 要先手動啟動:`cd /home/crazy/deepseek-game && export PATH="$HOME/.nvm/versions/node/v22.23.2/bin:$PATH" && corepack pnpm dsh web`)
+- 網址:`http://127.0.0.1:3080/`(server 由 PM2 常駐,2026-09-11 起;檢查/啟動:`bash ~/.claude/skills/deepseek-outsource/scripts/dsh-web.sh status` / `… start`,從 CC Bash 呼叫要加 `dangerouslyDisableSandbox: true`。**不要再手打 `corepack pnpm dsh web` 裸跑**——沒 supervisor、會被 OOM 優先砍,而且 `dsh-web-guard` hook 會直接 deny。服務掛掉/重啟後的復原流程見 `deepseek-outsource` SKILL.md「dsh 服務中斷復原」)
 - 首頁(未選任何 session):側邊欄 session 樹 + 底部空白輸入框(工作區未選時 placeholder 是「選擇工作區」,命令按鈕是 disabled)
 
 ### ⚠️ 開新會話的陷阱
@@ -68,7 +68,7 @@ description: DeepSeek harness(dsh)網頁 UI(http://127.0.0.1:3080/)操作手冊�
 
 4. **访问模式**按鈕(輸入框下方,預設「当前:Workspace Write」):見下方 `/permission`。
 
-5. **選擇模型**按鈕(顯示「当前 DeepSeek-V4-Flash,推理等级 Max」):見下方 `/model`。
+5. **選擇模型**按鈕(顯示「当前 DeepSeek-V41-Flash,推理等级 Max」):見下方 `/model`。
 
 6. 填完內容(或用 `/goal <目標>` 設定長任務目標)後,「發送消息」按鈕從 disabled 變成可點,按下去正式開始執行。
 
@@ -94,7 +94,9 @@ description: DeepSeek harness(dsh)網頁 UI(http://127.0.0.1:3080/)操作手冊�
 
 ### `/model`(等同「選擇模型」按鈕)
 
-兩層選單:**模型**(`DeepSeek-V4-Flash` 預設 / `DeepSeek-V4-Pro`)、**推理等級**(`Off` / `High` / `Max`,預設 Max)。
+兩層選單:**模型**(`DeepSeek-V41-Flash` 預設 / `DeepSeek-V4-Pro`)、**推理等級**(`Off` / `High` / `Max`,預設 Max)。
+
+預設值存在 `~/.dsh/settings.yaml` 的 `agent-default-model`(`model: deepseek-flash`、`reasoningEffort: max`),即時讀取、只影響**新建會話**;既有 session 保留各自的等級。這台機器 2026-09-21 從 `high` 改回 `max`。
 
 ## Goal 機制(`/goal`)
 
